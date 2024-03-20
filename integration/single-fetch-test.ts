@@ -88,11 +88,6 @@ const files = {
 test.describe("single-fetch", () => {
   let oldConsoleError: typeof console.error;
 
-  test.beforeEach(() => {
-    oldConsoleError = console.error;
-    console.error = () => {};
-  });
-
   test.afterEach(() => {
     console.error = oldConsoleError;
   });
@@ -149,6 +144,9 @@ test.describe("single-fetch", () => {
       },
       ServerMode.Development
     );
+
+    oldConsoleError = console.error;
+    console.error = () => {};
 
     let res = await fixture.requestSingleFetchData("/data.data?error=true");
     expect(res.data).toEqual({
@@ -416,7 +414,7 @@ test.describe("single-fetch", () => {
     expect(urls).toEqual([]);
   });
 
-  test("handles headers correctly for loader and action calls", async () => {
+  test("merges headers correctly for loader and action calls", async () => {
     let fixture = await createFixture({
       config: {
         future: {
@@ -464,6 +462,9 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("x-action")).toEqual("true");
     expect(res.headers.get("x-headers-function")).toEqual(null);
 
+    oldConsoleError = console.error;
+    console.error = () => {};
+
     res = await fixture.requestSingleFetchData("/headers.data?error");
     expect(res.headers.get("x-loader-error")).toEqual("true");
     expect(res.headers.get("x-headers-function")).toEqual("true");
@@ -476,7 +477,7 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("x-headers-function")).toEqual(null);
   });
 
-  test("scopes loader headers to the _routes param if present", async () => {
+  test("scopes headers function to the _routes param if more than one route exists", async () => {
     let fixture = await createFixture({
       config: {
         future: {
@@ -567,9 +568,9 @@ test.describe("single-fetch", () => {
       "/a/b/c.data?_routes=routes%2Fa.b.c"
     );
     expect(res.headers.get("x-a-loader")).toBeNull();
-    expect(res.headers.get("x-a-headers")).toBeNull();
+    expect(res.headers.get("x-a-headers")).toEqual("true");
     expect(res.headers.get("x-b-loader")).toBeNull();
-    expect(res.headers.get("x-b-headers")).toBeNull();
+    expect(res.headers.get("x-b-headers")).toEqual("true");
     expect(res.headers.get("x-c-loader")).toEqual("true");
     expect(res.headers.get("x-c-headers")).toEqual("true");
 
@@ -577,9 +578,9 @@ test.describe("single-fetch", () => {
       "/a/b/c.data?_routes=routes%2Fa,routes%2Fa.b.c"
     );
     expect(res.headers.get("x-a-loader")).toEqual("true");
-    expect(res.headers.get("x-a-loader")).toEqual("true");
-    expect(res.headers.get("x-b-headers")).toBeNull();
-    expect(res.headers.get("x-b-headers")).toBeNull();
+    expect(res.headers.get("x-a-headers")).toEqual("true");
+    expect(res.headers.get("x-b-loader")).toBeNull();
+    expect(res.headers.get("x-b-headers")).toEqual("true");
     expect(res.headers.get("x-c-loader")).toEqual("true");
     expect(res.headers.get("x-c-headers")).toEqual("true");
   });
